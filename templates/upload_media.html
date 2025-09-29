@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Media - WordPress API Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>Upload Media File
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">
+                            <i class="fas fa-file me-1"></i>Select File *
+                        </label>
+                        <input type="file" class="form-control" id="file" name="file" required
+                               accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt">
+                        <div class="form-text">
+                            Supported formats: Images (JPG, PNG, GIF), Videos (MP4, MOV), Audio (MP3, WAV), Documents (PDF, DOC, TXT)
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label">
+                            <i class="fas fa-heading me-1"></i>Title (Optional)
+                        </label>
+                        <input type="text" class="form-control" id="title" name="title"
+                               placeholder="Enter a custom title for this file...">
+                        <div class="form-text">If left empty, the filename will be used as the title.</div>
+                    </div>
+
+                    <!-- File Preview -->
+                    <div id="filePreview" class="mb-4" style="display: none;">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-eye me-1"></i>File Preview
+                                </h6>
+                            </div>
+                            <div class="card-body text-center" id="previewContent">
+                                <!-- Preview will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('media') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-info" id="submitBtn">
+                            <i class="fas fa-upload me-1"></i>Upload File
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Progress -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8 col-lg-6">
+        <div class="card" id="progressCard" style="display: none;">
+            <div class="card-body">
+                <h6>
+                    <i class="fas fa-spinner fa-spin me-2"></i>Uploading...
+                </h6>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                         role="progressbar" style="width: 0%" id="progressBar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('file');
+    const titleInput = document.getElementById('title');
+    const previewDiv = document.getElementById('filePreview');
+    const previewContent = document.getElementById('previewContent');
+    const form = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressCard = document.getElementById('progressCard');
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Auto-fill title if empty
+            if (!titleInput.value) {
+                titleInput.value = file.name.replace(/\.[^/.]+$/, "");
+            }
+
+            // Show preview
+            previewDiv.style.display = 'block';
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewContent.innerHTML = `
+                        <img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;" alt="Preview">
+                        <div class="mt-2">
+                            <strong>${file.name}</strong><br>
+                            <span class="text-muted">${file.type} • ${(file.size / 1024).toFixed(1)} KB</span>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewContent.innerHTML = `
+                        <video controls style="max-height: 200px; max-width: 100%;">
+                            <source src="${e.target.result}" type="${file.type}">
+                        </video>
+                        <div class="mt-2">
+                            <strong>${file.name}</strong><br>
+                            <span class="text-muted">${file.type} • ${(file.size / 1024 / 1024).toFixed(1)} MB</span>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('audio/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewContent.innerHTML = `
+                        <audio controls class="w-100">
+                            <source src="${e.target.result}" type="${file.type}">
+                        </audio>
+                        <div class="mt-2">
+                            <strong>${file.name}</strong><br>
+                            <span class="text-muted">${file.type} • ${(file.size / 1024 / 1024).toFixed(1)} MB</span>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewContent.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-file fa-4x text-secondary mb-3"></i>
+                        <div>
+                            <strong>${file.name}</strong><br>
+                            <span class="text-muted">${file.type} • ${(file.size / 1024).toFixed(1)} KB</span>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            previewDiv.style.display = 'none';
+        }
+    });
+
+    form.addEventListener('submit', function() {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading...';
+        submitBtn.disabled = true;
+        progressCard.style.display = 'block';
+
+        // Simulate progress (since we can't track real progress easily with Flask)
+        let progress = 0;
+        const progressBar = document.getElementById('progressBar');
+        const interval = setInterval(function() {
+            progress += Math.random() * 15;
+            if (progress > 90) {
+                progress = 90;
+                clearInterval(interval);
+            }
+            progressBar.style.width = progress + '%';
+        }, 200);
+    });
+});
+</script>
+{% endblock %}

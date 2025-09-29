@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Pages - WordPress API Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-file-alt me-2"></i>Pages Management
+    </h2>
+    <a href="{{ url_for('new_page') }}" class="btn btn-secondary">
+        <i class="fas fa-plus me-1"></i>New Page
+    </a>
+</div>
+
+{% if pages %}
+    <div class="row">
+        {% for page in pages %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ page.title.rendered }}</h5>
+
+                        <div class="text-muted small mb-2">
+                            <i class="fas fa-calendar me-1"></i>
+                            {{ page.date[:10] }}
+                            <span class="ms-2">
+                                <span class="badge bg-{{ 'success' if page.status == 'publish' else 'warning' }}">
+                                    {{ page.status.title() }}
+                                </span>
+                            </span>
+                        </div>
+
+                        {% if page.parent %}
+                            <div class="text-muted small mb-2">
+                                <i class="fas fa-sitemap me-1"></i>Child Page
+                            </div>
+                        {% endif %}
+
+                        <div class="card-text flex-grow-1">
+                            {% if page.excerpt and page.excerpt.rendered %}
+                                {{ (page.excerpt.rendered | striptags)[:150] }}...
+                            {% else %}
+                                {{ (page.content.rendered | striptags)[:150] }}...
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-3">
+                            <a href="{{ page.link }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-external-link-alt me-1"></i>View
+                            </a>
+                            <button class="btn btn-outline-info btn-sm ms-1" onclick="viewPageDetails({{ page.id }})">
+                                <i class="fas fa-info-circle me-1"></i>Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Pages pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('pages', page=current_page-1) }}">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">Page {{ current_page }}</span>
+            </li>
+
+            {% if pages|length == 10 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('pages', page=current_page+1) }}">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">No pages found</h4>
+        <p class="text-muted">Create your first page to get started!</p>
+        <a href="{{ url_for('new_page') }}" class="btn btn-secondary">
+            <i class="fas fa-plus me-1"></i>Create First Page
+        </a>
+    </div>
+{% endif %}
+
+<!-- Modal for page details -->
+<div class="modal fade" id="pageDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Page Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="pageDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewPageDetails(pageId) {
+    const modal = new bootstrap.Modal(document.getElementById('pageDetailsModal'));
+    const content = document.getElementById('pageDetailsContent');
+
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+
+    modal.show();
+
+    // Fetch page details from the pages data
+    const pages = {{ pages | tojson }};
+    const page = pages.find(p => p.id === pageId);
+
+    if (page) {
+        content.innerHTML = `
+            <h4>${page.title.rendered}</h4>
+            <div class="mb-3">
+                <span class="badge bg-${page.status === 'publish' ? 'success' : 'warning'}">${page.status}</span>
+                <span class="text-muted ms-2">${page.date}</span>
+                ${page.parent ? '<span class="badge bg-info ms-2">Child Page</span>' : ''}
+            </div>
+            <div class="border p-3 rounded bg-light">
+                ${page.content.rendered}
+            </div>
+        `;
+    }
+}
+</script>
+{% endblock %}

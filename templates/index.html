@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - WordPress API Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-primary">
+                <i class="fab fa-wordpress me-3"></i>WordPress API Manager
+            </h1>
+            <p class="lead text-muted">Manage your WordPress content through beautiful interfaces</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-blog fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Posts</h5>
+                <p class="card-text">View, create, and manage your blog posts</p>
+                <a href="{{ url_for('posts') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-right me-1"></i>Manage Posts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-file-alt fa-3x text-secondary"></i>
+                </div>
+                <h5 class="card-title">Pages</h5>
+                <p class="card-text">Manage your static pages</p>
+                <a href="{{ url_for('pages') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>Manage Pages
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-images fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">Media</h5>
+                <p class="card-text">Upload and manage media files</p>
+                <a href="{{ url_for('media') }}" class="btn btn-info">
+                    <i class="fas fa-arrow-right me-1"></i>Manage Media
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-bars fa-3x text-warning"></i>
+                </div>
+                <h5 class="card-title">Menu Items</h5>
+                <p class="card-text">Create and manage navigation menus</p>
+                <a href="{{ url_for('menu_items') }}" class="btn btn-warning">
+                    <i class="fas fa-arrow-right me-1"></i>Manage Menu
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-cubes fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title">Blocks</h5>
+                <p class="card-text">Manage Gutenberg content blocks</p>
+                <a href="{{ url_for('blocks') }}" class="btn btn-success">
+                    <i class="fas fa-arrow-right me-1"></i>Manage Blocks
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>Getting Started
+                </h5>
+                <p class="card-text">
+                    Make sure to configure your <code>.env</code> file with your WordPress site URL and bearer token:
+                </p>
+                <pre class="bg-dark text-light p-3 rounded"><code>WORDPRESS_BASE_URL=https://vibebuilder.studio
+BEARER_TOKEN=your_bearer_token_here</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}New Block - WordPress API Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Block
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="newBlockForm">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">
+                            <i class="fas fa-heading me-1"></i>Block Title *
+                        </label>
+                        <input type="text" class="form-control" id="title" name="title" required
+                               placeholder="Enter a descriptive title for your block...">
+                        <div class="form-text">This helps you identify the block in your library</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="content" class="form-label">
+                            <i class="fas fa-code me-1"></i>Block Content *
+                        </label>
+                        <textarea class="form-control" id="content" name="content" rows="15" required
+                                  placeholder="Enter your block content here (HTML, Gutenberg blocks, shortcodes, etc.)..."></textarea>
+                        <div class="form-text">
+                            You can use HTML, Gutenberg block markup, shortcodes, or any WordPress content.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="status" class="form-label">
+                            <i class="fas fa-eye me-1"></i>Block Status
+                        </label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="draft">Draft</option>
+                            <option value="publish">Published</option>
+                            <option value="private">Private</option>
+                        </select>
+                        <div class="form-text">Published blocks can be used across your site</div>
+                    </div>
+
+                    <!-- Block Examples -->
+                    <div class="mb-4">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-lightbulb me-1"></i>Block Examples
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="accordion" id="examplesAccordion">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#htmlExample">
+                                                HTML Block Example
+                                            </button>
+                                        </h2>
+                                        <div id="htmlExample" class="accordion-collapse collapse" data-bs-parent="#examplesAccordion">
+                                            <div class="accordion-body">
+                                                <button class="btn btn-sm btn-outline-primary mb-2" onclick="insertExample('html')">
+                                                    <i class="fas fa-plus me-1"></i>Use This Example
+                                                </button>
+                                                <pre class="bg-dark text-light p-3 rounded small"><code>&lt;div class="custom-block"&gt;
+    &lt;h3&gt;Welcome Message&lt;/h3&gt;
+    &lt;p&gt;This is a reusable HTML block that can be inserted anywhere on your site.&lt;/p&gt;
+    &lt;button class="btn btn-primary"&gt;Learn More&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#gutenbergExample">
+                                                Gutenberg Block Example
+                                            </button>
+                                        </h2>
+                                        <div id="gutenbergExample" class="accordion-collapse collapse" data-bs-parent="#examplesAccordion">
+                                            <div class="accordion-body">
+                                                <button class="btn btn-sm btn-outline-primary mb-2" onclick="insertExample('gutenberg')">
+                                                    <i class="fas fa-plus me-1"></i>Use This Example
+                                                </button>
+                                                <pre class="bg-dark text-light p-3 rounded small"><code>&lt;!-- wp:columns --&gt;
+&lt;div class="wp-block-columns"&gt;
+    &lt;!-- wp:column --&gt;
+    &lt;div class="wp-block-column"&gt;
+        &lt;!-- wp:heading {"level":3} --&gt;
+        &lt;h3&gt;Feature 1&lt;/h3&gt;
+        &lt;!-- /wp:heading --&gt;
+        &lt;!-- wp:paragraph --&gt;
+        &lt;p&gt;Description of your first feature.&lt;/p&gt;
+        &lt;!-- /wp:paragraph --&gt;
+    &lt;/div&gt;
+    &lt;!-- /wp:column --&gt;
+&lt;/div&gt;
+&lt;!-- /wp:columns --&gt;</code></pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#shortcodeExample">
+                                                Shortcode Block Example
+                                            </button>
+                                        </h2>
+                                        <div id="shortcodeExample" class="accordion-collapse collapse" data-bs-parent="#examplesAccordion">
+                                            <div class="accordion-body">
+                                                <button class="btn btn-sm btn-outline-primary mb-2" onclick="insertExample('shortcode')">
+                                                    <i class="fas fa-plus me-1"></i>Use This Example
+                                                </button>
+                                                <pre class="bg-dark text-light p-3 rounded small"><code>[custom_cta title="Special Offer" button_text="Get Started" button_url="/signup"]
+This is a call-to-action block with shortcode that can be reused across multiple pages.
+[/custom_cta]</code></pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('blocks') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success" id="submitBtn">
+                            <i class="fas fa-save me-1"></i>Create Block
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Card -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-10 col-lg-8">
+        <div class="card" id="previewCard" style="display: none;">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-eye me-2"></i>Live Preview
+                </h5>
+            </div>
+            <div class="card-body">
+                <h5 id="previewTitle">Block Title</h5>
+                <div id="previewContent" class="mt-3 border p-3 rounded bg-light">Block content will appear here...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const titleInput = document.getElementById('title');
+    const contentInput = document.getElementById('content');
+    const previewCard = document.getElementById('previewCard');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewContent = document.getElementById('previewContent');
+    const form = document.getElementById('newBlockForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function updatePreview() {
+        const title = titleInput.value.trim();
+        const content = contentInput.value.trim();
+
+        if (title || content) {
+            previewCard.style.display = 'block';
+            previewTitle.textContent = title || 'Block Title';
+
+            // For preview, render HTML content safely
+            if (content) {
+                // Simple HTML rendering for preview (in production, this should be sanitized)
+                previewContent.innerHTML = content;
+            } else {
+                previewContent.textContent = 'Block content will appear here...';
+            }
+        } else {
+            previewCard.style.display = 'none';
+        }
+    }
+
+    titleInput.addEventListener('input', updatePreview);
+    contentInput.addEventListener('input', updatePreview);
+
+    form.addEventListener('submit', function() {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
+        submitBtn.disabled = true;
+    });
+});
+
+function insertExample(type) {
+    const contentTextarea = document.getElementById('content');
+    const titleInput = document.getElementById('title');
+
+    let exampleContent = '';
+    let exampleTitle = '';
+
+    switch(type) {
+        case 'html':
+            exampleTitle = 'Welcome Message Block';
+            exampleContent = `<div class="custom-block">
+    <h3>Welcome Message</h3>
+    <p>This is a reusable HTML block that can be inserted anywhere on your site.</p>
+    <button class="btn btn-primary">Learn More</button>
+</div>`;
+            break;
+
+        case 'gutenberg':
+            exampleTitle = 'Feature Columns Block';
+            exampleContent = `<!-- wp:columns -->
+<div class="wp-block-columns">
+    <!-- wp:column -->
+    <div class="wp-block-column">
+        <!-- wp:heading {"level":3} -->
+        <h3>Feature 1</h3>
+        <!-- /wp:heading -->
+        <!-- wp:paragraph -->
+        <p>Description of your first feature.</p>
+        <!-- /wp:paragraph -->
+    </div>
+    <!-- /wp:column -->
+</div>
+<!-- /wp:columns -->`;
+            break;
+
+        case 'shortcode':
+            exampleTitle = 'CTA Shortcode Block';
+            exampleContent = `[custom_cta title="Special Offer" button_text="Get Started" button_url="/signup"]
+This is a call-to-action block with shortcode that can be reused across multiple pages.
+[/custom_cta]`;
+            break;
+    }
+
+    if (!titleInput.value.trim()) {
+        titleInput.value = exampleTitle;
+    }
+
+    contentTextarea.value = exampleContent;
+
+    // Trigger preview update
+    const event = new Event('input', { bubbles: true });
+    contentTextarea.dispatchEvent(event);
+    titleInput.dispatchEvent(event);
+
+    // Scroll to form
+    document.getElementById('newBlockForm').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}

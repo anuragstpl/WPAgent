@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Media - WordPress API Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-images me-2"></i>Media Library
+    </h2>
+    <a href="{{ url_for('upload_media') }}" class="btn btn-info">
+        <i class="fas fa-upload me-1"></i>Upload Media
+    </a>
+</div>
+
+{% if media %}
+    <div class="row">
+        {% for item in media %}
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card h-100">
+                    {% if item.media_type == 'image' %}
+                        <img src="{{ item.source_url }}" class="card-img-top" alt="{{ item.title.rendered }}"
+                             style="height: 200px; object-fit: cover; cursor: pointer;"
+                             onclick="viewMediaDetails({{ item.id }})">
+                    {% else %}
+                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                             style="height: 200px; cursor: pointer;" onclick="viewMediaDetails({{ item.id }})">
+                            <div class="text-center">
+                                {% if item.media_type == 'video' %}
+                                    <i class="fas fa-play-circle fa-4x text-info"></i>
+                                {% elif item.media_type == 'audio' %}
+                                    <i class="fas fa-music fa-4x text-success"></i>
+                                {% else %}
+                                    <i class="fas fa-file fa-4x text-secondary"></i>
+                                {% endif %}
+                                <div class="mt-2 small text-muted">{{ item.mime_type }}</div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ item.title.rendered or item.slug }}</h6>
+
+                        <div class="text-muted small mb-2">
+                            <i class="fas fa-calendar me-1"></i>{{ item.date[:10] }}
+                        </div>
+
+                        <div class="text-muted small mb-2">
+                            <i class="fas fa-hdd me-1"></i>
+                            {% if item.media_details and item.media_details.filesize %}
+                                {{ "%.1f"|format(item.media_details.filesize / 1024) }} KB
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-auto">
+                            <button class="btn btn-outline-info btn-sm" onclick="viewMediaDetails({{ item.id }})">
+                                <i class="fas fa-info-circle me-1"></i>Details
+                            </button>
+                            <a href="{{ item.source_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-external-link-alt me-1"></i>View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Media pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('media', page=current_page-1) }}">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">Page {{ current_page }}</span>
+            </li>
+
+            {% if media|length == 12 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('media', page=current_page+1) }}">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-images fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">No media files found</h4>
+        <p class="text-muted">Upload your first media file to get started!</p>
+        <a href="{{ url_for('upload_media') }}" class="btn btn-info">
+            <i class="fas fa-upload me-1"></i>Upload Media
+        </a>
+    </div>
+{% endif %}
+
+<!-- Modal for media details -->
+<div class="modal fade" id="mediaDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Media Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="mediaDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewMediaDetails(mediaId) {
+    const modal = new bootstrap.Modal(document.getElementById('mediaDetailsModal'));
+    const content = document.getElementById('mediaDetailsContent');
+
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+
+    modal.show();
+
+    // Find media item in the current page data
+    const mediaItems = {{ media | tojson }};
+    const mediaItem = mediaItems.find(m => m.id === mediaId);
+
+    if (mediaItem) {
+        let mediaPreview = '';
+        if (mediaItem.media_type === 'image') {
+            mediaPreview = `<img src="${mediaItem.source_url}" class="img-fluid mb-3" alt="${mediaItem.title.rendered}">`;
+        } else if (mediaItem.media_type === 'video') {
+            mediaPreview = `<video controls class="img-fluid mb-3"><source src="${mediaItem.source_url}" type="${mediaItem.mime_type}"></video>`;
+        } else if (mediaItem.media_type === 'audio') {
+            mediaPreview = `<audio controls class="w-100 mb-3"><source src="${mediaItem.source_url}" type="${mediaItem.mime_type}"></audio>`;
+        }
+
+        content.innerHTML = `
+            ${mediaPreview}
+            <h4>${mediaItem.title.rendered || mediaItem.slug}</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Type:</strong> ${mediaItem.media_type}<br>
+                    <strong>MIME Type:</strong> ${mediaItem.mime_type}<br>
+                    <strong>Date:</strong> ${mediaItem.date}
+                </div>
+                <div class="col-md-6">
+                    ${mediaItem.media_details && mediaItem.media_details.filesize ? `<strong>File Size:</strong> ${(mediaItem.media_details.filesize / 1024).toFixed(1)} KB<br>` : ''}
+                    ${mediaItem.media_details && mediaItem.media_details.width ? `<strong>Dimensions:</strong> ${mediaItem.media_details.width}x${mediaItem.media_details.height}<br>` : ''}
+                </div>
+            </div>
+            <div class="mt-3">
+                <strong>URL:</strong><br>
+                <input type="text" class="form-control" value="${mediaItem.source_url}" readonly onclick="this.select()">
+            </div>
+        `;
+    }
+}
+</script>
+{% endblock %}

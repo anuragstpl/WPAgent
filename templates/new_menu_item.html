@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}New Menu Item - WordPress API Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Menu Item
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="newMenuItemForm">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">
+                            <i class="fas fa-heading me-1"></i>Navigation Label *
+                        </label>
+                        <input type="text" class="form-control" id="title" name="title" required
+                               placeholder="Enter the text to appear in the menu...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="url" class="form-label">
+                            <i class="fas fa-link me-1"></i>URL *
+                        </label>
+                        <input type="url" class="form-control" id="url" name="url" required
+                               placeholder="https://example.com or /relative-path">
+                        <div class="form-text">Enter a full URL (https://...) or relative path (/page)</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="menu_order" class="form-label">
+                                    <i class="fas fa-sort-numeric-up me-1"></i>Menu Order
+                                </label>
+                                <input type="number" class="form-control" id="menu_order" name="menu_order"
+                                       min="0" value="0" placeholder="0">
+                                <div class="form-text">Lower numbers appear first</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="parent" class="form-label">
+                                    <i class="fas fa-sitemap me-1"></i>Parent Item
+                                </label>
+                                <input type="number" class="form-control" id="parent" name="parent"
+                                       min="0" value="0" placeholder="0">
+                                <div class="form-text">0 = Top level item</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-lightbulb me-1"></i>Common URL Examples
+                                </h6>
+                            </div>
+                            <div class="card-body small">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>External Links:</strong><br>
+                                        <code>https://google.com</code><br>
+                                        <code>https://example.com/page</code>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Internal Links:</strong><br>
+                                        <code>/about-us</code><br>
+                                        <code>/contact</code><br>
+                                        <code>/blog</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('menu_items') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-warning" id="submitBtn">
+                            <i class="fas fa-save me-1"></i>Create Menu Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Card -->
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8 col-lg-6">
+        <div class="card" id="previewCard" style="display: none;">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-eye me-2"></i>Menu Preview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="border p-3 rounded bg-light">
+                    <nav class="navbar navbar-expand navbar-light bg-white rounded">
+                        <div class="navbar-nav">
+                            <a class="nav-link" href="#" id="previewLink">
+                                <span id="previewTitle">Menu Item</span>
+                            </a>
+                        </div>
+                    </nav>
+                </div>
+                <small class="text-muted">This is how your menu item will appear</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const titleInput = document.getElementById('title');
+    const urlInput = document.getElementById('url');
+    const previewCard = document.getElementById('previewCard');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewLink = document.getElementById('previewLink');
+    const form = document.getElementById('newMenuItemForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function updatePreview() {
+        const title = titleInput.value.trim();
+        const url = urlInput.value.trim();
+
+        if (title || url) {
+            previewCard.style.display = 'block';
+            previewTitle.textContent = title || 'Menu Item';
+            previewLink.href = url || '#';
+
+            // Visual feedback for URL validity
+            if (url && (url.startsWith('http') || url.startsWith('/'))) {
+                previewLink.classList.remove('text-muted');
+                previewLink.classList.add('text-primary');
+            } else {
+                previewLink.classList.add('text-muted');
+                previewLink.classList.remove('text-primary');
+            }
+        } else {
+            previewCard.style.display = 'none';
+        }
+    }
+
+    titleInput.addEventListener('input', updatePreview);
+    urlInput.addEventListener('input', updatePreview);
+
+    form.addEventListener('submit', function(e) {
+        const url = urlInput.value.trim();
+
+        // Basic URL validation
+        if (!url.startsWith('http') && !url.startsWith('/')) {
+            e.preventDefault();
+            alert('Please enter a valid URL starting with "http" or "/"');
+            return;
+        }
+
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
+        submitBtn.disabled = true;
+    });
+
+    // Auto-suggest common URLs
+    const commonUrls = [
+        { text: 'Home', url: '/' },
+        { text: 'About', url: '/about' },
+        { text: 'Contact', url: '/contact' },
+        { text: 'Blog', url: '/blog' },
+        { text: 'Services', url: '/services' },
+        { text: 'Portfolio', url: '/portfolio' }
+    ];
+
+    titleInput.addEventListener('input', function() {
+        const value = this.value.toLowerCase();
+        const match = commonUrls.find(item => item.text.toLowerCase() === value);
+        if (match && !urlInput.value) {
+            urlInput.value = match.url;
+            updatePreview();
+        }
+    });
+});
+</script>
+{% endblock %}
