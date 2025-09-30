@@ -2484,6 +2484,121 @@ def get_site_info() -> str:
     except Exception as e:
         return f"❌ Error getting site info: {str(e)}"
 
+@Tool
+def get_widgets() -> str:
+    """Get all WordPress widgets from the widgets endpoint."""
+    try:
+        print("DEBUG: get_widgets called")
+
+        headers = get_wordpress_headers()
+        response = requests.get(f"{WORDPRESS_BASE_URL}/wp-json/wp/v2/widgets", headers=headers)
+
+        if response.status_code == 200:
+            widgets = response.json()
+            if not widgets:
+                return "📦 No widgets found."
+
+            result = "🧩 **WordPress Widgets:**\n\n"
+            for widget in widgets:
+                result += f"**{widget.get('id', 'Unknown ID')}**\n"
+                result += f"**Type:** {widget.get('id_base', 'Unknown')}\n"
+                result += f"**Title:** {widget.get('instance', {}).get('title', 'No title')}\n"
+                result += f"**Sidebar:** {widget.get('sidebar', 'None')}\n\n"
+
+            return result
+        elif response.status_code == 401:
+            return "❌ Unauthorized: Cannot access widgets endpoint."
+        else:
+            return f"❌ Error getting widgets: {response.status_code}"
+
+    except Exception as e:
+        return f"❌ Error getting widgets: {str(e)}"
+
+@Tool
+def get_revisions(post_id: int, per_page: int = 10, page: int = 1) -> str:
+    """Get revisions for a specific post or page."""
+    try:
+        print(f"DEBUG: get_revisions called for post_id={post_id}")
+
+        headers = get_wordpress_headers()
+        params = {
+            'per_page': per_page,
+            'page': page
+        }
+
+        response = requests.get(
+            f"{WORDPRESS_BASE_URL}/wp-json/wp/v2/posts/{post_id}/revisions",
+            headers=headers,
+            params=params
+        )
+
+        if response.status_code == 200:
+            revisions = response.json()
+            if not revisions:
+                return f"📝 No revisions found for post ID {post_id}."
+
+            result = f"📚 **Revisions for Post ID {post_id}:**\n\n"
+            for revision in revisions:
+                result += f"**Revision ID:** {revision.get('id', 'Unknown')}\n"
+                result += f"**Modified:** {revision.get('date', 'Unknown date')}\n"
+                result += f"**Author:** {revision.get('author', 'Unknown')}\n"
+                result += f"**Title:** {revision.get('title', {}).get('rendered', 'No title')}\n\n"
+
+            return result
+        elif response.status_code == 404:
+            return f"❌ Post ID {post_id} not found or no revisions available."
+        else:
+            return f"❌ Error getting revisions: {response.status_code}"
+
+    except Exception as e:
+        return f"❌ Error getting revisions: {str(e)}"
+
+@Tool
+def optimize_site_cache() -> str:
+    """Manage SiteGround cache optimization."""
+    try:
+        print("DEBUG: optimize_site_cache called")
+
+        headers = get_wordpress_headers()
+
+        # Try to get cache status first
+        response = requests.get(f"{WORDPRESS_BASE_URL}/wp-json/siteground-optimizer/v1/cache", headers=headers)
+
+        if response.status_code == 200:
+            cache_data = response.json()
+            return f"🚀 **SiteGround Cache Status:**\n\n" \
+                   f"**File Cache:** {cache_data.get('file_cache', 'Unknown')}\n" \
+                   f"**Browser Cache:** {cache_data.get('browser_cache', 'Unknown')}\n" \
+                   f"**Memcached:** {cache_data.get('memcached', 'Unknown')}\n"
+        elif response.status_code == 401:
+            return "❌ Unauthorized: Cannot access SiteGround optimizer."
+        else:
+            return f"❌ SiteGround optimizer not available: {response.status_code}"
+
+    except Exception as e:
+        return f"❌ Error accessing SiteGround optimizer: {str(e)}"
+
+@Tool
+def get_site_health() -> str:
+    """Get WordPress site health information."""
+    try:
+        print("DEBUG: get_site_health called")
+
+        headers = get_wordpress_headers()
+        response = requests.get(f"{WORDPRESS_BASE_URL}/wp-json/wp-site-health/v1/tests/page-cache", headers=headers)
+
+        if response.status_code == 200:
+            health_data = response.json()
+            return f"🏥 **Site Health:**\n\n" \
+                   f"**Status:** {health_data.get('status', 'Unknown')}\n" \
+                   f"**Description:** {health_data.get('description', 'No description')}\n"
+        else:
+            # Fallback - just return basic site info
+            return "🏥 **Site Health:** Information not available through REST API."
+
+    except Exception as e:
+        return f"❌ Error getting site health: {str(e)}"
+
 # Initialize the Pydantic AI Agent
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable is required")
@@ -2502,7 +2617,8 @@ agent = Agent(
            get_post_types, get_post_statuses, get_taxonomies, get_themes,
            get_site_settings, get_templates, search_content, get_site_info,
            update_post, delete_post, update_page, delete_page, update_user, delete_user,
-           update_comment, delete_comment, update_category, delete_category, update_tag, delete_tag],
+           update_comment, delete_comment, update_category, delete_category, update_tag, delete_tag,
+           get_widgets, get_revisions, optimize_site_cache, get_site_health],
     system_prompt="""You are a comprehensive WordPress content management assistant. You can help users with:
 
 **Content Management:**
