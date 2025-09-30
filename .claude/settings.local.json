@@ -3,7 +3,8 @@
     "allow": [
       "WebFetch(domain:vibebuilder.studio)",
       "Bash(python test_connection.py:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

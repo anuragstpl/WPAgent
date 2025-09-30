@@ -3,361 +3,1001 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WordPress AI Chatbot</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>AI Content Assistant</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .chat-container {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             overflow: hidden;
         }
 
-        .chat-header {
-            background: linear-gradient(135deg, #2196F3, #21CBF3);
-            color: white;
-            padding: 20px;
-            text-align: center;
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
         }
 
-        .chat-messages {
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.2);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #f59e0b 100%);
+            opacity: 0.1;
+            border-radius: 0 0 50% 0;
+        }
+
+        .sidebar-header {
+            padding: 30px 25px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e293b, #475569);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .quick-actions {
+            flex: 1;
+            padding: 0 25px 25px;
+            overflow-y: auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .action-category {
+            margin-bottom: 35px;
+        }
+
+        .category-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 16px;
+            padding-left: 4px;
+        }
+
+        .action-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            font-weight: 500;
+            color: #334155;
+            width: 100%;
+            text-align: left;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .action-item:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        .action-item i {
+            width: 18px;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        /* Main Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+        }
+
+        .chat-header {
+            padding: 25px 35px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #64748b;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .menu-toggle:hover {
+            background: rgba(148, 163, 184, 0.1);
+            color: #334155;
+        }
+
+        .chat-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-btn {
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #64748b;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #334155;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Messages Container */
+        .messages-area {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            background-color: #f8f9fa;
+            padding: 40px 35px;
+            background: transparent;
+        }
+
+        .messages-list {
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .message {
-            margin-bottom: 20px;
+            margin-bottom: 32px;
             display: flex;
-            align-items: flex-start;
+            gap: 18px;
+            animation: slideIn 0.4s ease-out;
         }
 
         .message.user {
-            justify-content: flex-end;
+            flex-direction: row-reverse;
         }
 
-        .message.bot {
-            justify-content: flex-start;
-        }
-
-        .message-content {
-            max-width: 70%;
-            padding: 15px 20px;
-            border-radius: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .message.user .message-content {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            margin-left: auto;
-        }
-
-        .message.bot .message-content {
-            background: white;
-            color: #333;
-            border: 1px solid #e9ecef;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message-avatar {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
-            margin: 0 10px;
+            flex-shrink: 0;
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .user-avatar {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
         }
 
         .bot-avatar {
-            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
         }
 
-        .chat-input {
-            padding: 20px;
-            background: white;
-            border-top: 1px solid #e9ecef;
+        .message-content {
+            flex: 1;
+            max-width: calc(100% - 60px);
         }
 
-        .input-group {
+        .message-bubble {
+            padding: 20px 24px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.6;
             position: relative;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .form-control {
-            border-radius: 25px;
-            border: 2px solid #e9ecef;
-            padding: 12px 20px;
-            padding-right: 60px;
-        }
-
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-
-        .send-btn {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            transition: all 0.3s;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
         }
 
-        .send-btn:hover {
-            transform: translateY(-50%) scale(1.1);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        .message.bot .message-bubble {
+            background: rgba(255, 255, 255, 0.9);
+            color: #374151;
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
         }
 
-        .send-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+        .message-bubble strong {
+            font-weight: 600;
         }
 
+        .message-bubble code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 13px;
+        }
+
+        .message.user .message-bubble code {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Typing Indicator */
         .typing-indicator {
+            margin-bottom: 32px;
             display: none;
-            padding: 10px 20px;
-            font-style: italic;
-            color: #666;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .typing-content {
+            display: flex;
+            gap: 18px;
+        }
+
+        .typing-bubble {
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: fit-content;
         }
 
         .typing-dots {
-            display: inline-block;
+            display: flex;
+            gap: 6px;
         }
 
-        .typing-dots span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
+        .typing-dot {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background-color: #667eea;
-            margin: 0 2px;
-            animation: typing 1.5s infinite;
+            background: #94a3b8;
+            animation: typing 1.4s infinite;
         }
 
-        .typing-dots span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dots span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
         @keyframes typing {
             0%, 60%, 100% {
                 transform: translateY(0);
+                opacity: 0.4;
             }
             30% {
-                transform: translateY(-10px);
+                transform: translateY(-12px);
+                opacity: 1;
             }
         }
 
-        .quick-commands {
-            padding: 15px 20px;
-            background: #f8f9fa;
-            border-top: 1px solid #e9ecef;
+        /* Welcome Message */
+        .welcome-screen {
+            text-align: center;
+            padding: 80px 40px;
+            color: #64748b;
+            animation: fadeIn 0.6s ease-out;
         }
 
-        .command-btn {
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
             background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
             color: white;
-            border: none;
-            border-radius: 15px;
-            padding: 8px 15px;
-            margin: 5px;
-            font-size: 12px;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #1e293b, #475569);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-description {
+            font-size: 18px;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            color: #64748b;
+        }
+
+        .welcome-suggestions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .suggestion-chip {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 25px;
+            cursor: pointer;
             transition: all 0.3s;
+            font-size: 14px;
+            color: #475569;
+            backdrop-filter: blur(10px);
         }
 
-        .command-btn:hover {
+        .suggestion-chip:hover {
+            background: rgba(255, 255, 255, 0.95);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            color: white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            color: #334155;
         }
 
-        .clear-btn {
+        /* Input Area */
+        .input-area {
+            padding: 30px 35px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        .input-container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .input-wrapper {
+            position: relative;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.3s;
+            backdrop-filter: blur(20px);
+        }
+
+        .input-wrapper:focus-within {
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .message-input {
+            width: 100%;
+            padding: 18px 70px 18px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            resize: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            color: #334155;
+            max-height: 150px;
+        }
+
+        .message-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .send-button {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
             border: none;
             border-radius: 50%;
-            width: 35px;
-            height: 35px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
-        .clear-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
+        .send-button:hover:not(:disabled) {
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
         }
 
-        /* Responsive design */
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: translateY(-50%);
+        }
+
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .message-content {
-                max-width: 85%;
+            .sidebar {
+                position: fixed;
+                left: -320px;
+                top: 0;
+                height: 100vh;
+                z-index: 1000;
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                width: 280px;
             }
 
-            .chat-container {
-                border-radius: 0;
+            .sidebar.open {
+                left: 0;
+            }
+
+            .chat-area {
+                width: 100%;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .chat-header {
+                padding: 20px 25px;
+            }
+
+            .messages-area {
+                padding: 25px 20px;
+            }
+
+            .input-area {
+                padding: 20px 20px 25px;
+            }
+
+            .message-bubble {
+                padding: 16px 20px;
+                font-size: 14px;
+            }
+
+            .welcome-screen {
+                padding: 60px 25px;
+            }
+
+            .welcome-title {
+                font-size: 28px;
+            }
+
+            .welcome-description {
+                font-size: 16px;
+            }
+
+            .welcome-suggestions {
+                gap: 12px;
+            }
+
+            .suggestion-chip {
+                padding: 10px 16px;
+                font-size: 13px;
             }
         }
 
-        /* Enhanced markdown-like formatting */
-        .message-content strong {
-            color: #2c3e50;
-            font-weight: 600;
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100%;
+                left: -100%;
+            }
+
+            .chat-header {
+                padding: 15px 20px;
+            }
+
+            .messages-area {
+                padding: 20px 15px;
+            }
+
+            .input-area {
+                padding: 15px 15px 20px;
+            }
+
+            .message-input {
+                padding: 16px 60px 16px 20px;
+                font-size: 15px;
+            }
+
+            .send-button {
+                width: 40px;
+                height: 40px;
+                right: 6px;
+            }
+
+            .welcome-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 32px;
+            }
         }
 
-        .message-content em {
-            color: #7f8c8d;
+        /* Overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
         }
 
-        .message-content code {
-            background: #f1f2f6;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
+        .overlay.show {
+            display: block;
+        }
+
+        /* Custom Scrollbar */
+        .messages-area::-webkit-scrollbar,
+        .quick-actions::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-area::-webkit-scrollbar-track,
+        .quick-actions::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-area::-webkit-scrollbar-thumb,
+        .quick-actions::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 3px;
+        }
+
+        .messages-area::-webkit-scrollbar-thumb:hover,
+        .quick-actions::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid h-100 p-3">
-        <div class="row h-100 justify-content-center">
-            <div class="col-12 col-md-8 col-lg-6">
-                <div class="chat-container">
-                    <!-- Chat Header -->
-                    <div class="chat-header position-relative">
-                        <h4 class="mb-0">
-                            <i class="fab fa-wordpress me-2"></i>WordPress AI Assistant
-                        </h4>
-                        <small>Powered by Gemini AI</small>
-                        <button class="clear-btn" onclick="clearChat()" title="Clear Chat">
-                            <i class="fas fa-broom"></i>
-                        </button>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-brain"></i>
                     </div>
+                    <div class="logo-text">AI Assistant</div>
+                </div>
+                <div class="subtitle">Your intelligent content companion</div>
+            </div>
 
-                    <!-- Quick Commands -->
-                    <div class="quick-commands text-center">
-                        <button class="command-btn" onclick="sendQuickCommand('show posts')">
-                            <i class="fas fa-list me-1"></i>Show Posts
-                        </button>
-                        <button class="command-btn" onclick="sendQuickCommand('create post')">
-                            <i class="fas fa-plus me-1"></i>Create Post
-                        </button>
-                        <button class="command-btn" onclick="sendQuickCommand('site info')">
-                            <i class="fas fa-info me-1"></i>Site Info
-                        </button>
-                        <button class="command-btn" onclick="sendQuickCommand('search posts')">
-                            <i class="fas fa-search me-1"></i>Search Posts
-                        </button>
-                    </div>
+            <div class="quick-actions">
+                <div class="action-category">
+                    <div class="category-title">Posts</div>
+                    <button class="action-item" onclick="sendQuickCommand('show posts')">
+                        <i class="fas fa-file-text"></i>
+                        View Posts
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('create post')">
+                        <i class="fas fa-pen"></i>
+                        Create Post
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('update post')">
+                        <i class="fas fa-edit"></i>
+                        Update Post
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('delete post')">
+                        <i class="fas fa-trash"></i>
+                        Delete Post
+                    </button>
+                </div>
 
-                    <!-- Chat Messages -->
-                    <div class="chat-messages" id="chatMessages">
-                        <!-- Welcome Message -->
-                        <div class="message bot">
-                            <div class="message-avatar bot-avatar">
-                                <i class="fas fa-robot"></i>
+                <div class="action-category">
+                    <div class="category-title">Pages</div>
+                    <button class="action-item" onclick="sendQuickCommand('show pages')">
+                        <i class="fas fa-file"></i>
+                        View Pages
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('create page')">
+                        <i class="fas fa-plus-circle"></i>
+                        Create Page
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('update page')">
+                        <i class="fas fa-edit"></i>
+                        Update Page
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('delete page')">
+                        <i class="fas fa-trash"></i>
+                        Delete Page
+                    </button>
+                </div>
+
+                <div class="action-category">
+                    <div class="category-title">Media & Comments</div>
+                    <button class="action-item" onclick="sendQuickCommand('show media')">
+                        <i class="fas fa-images"></i>
+                        Media Library
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('show comments')">
+                        <i class="fas fa-comments"></i>
+                        View Comments
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('update comment')">
+                        <i class="fas fa-comment-dots"></i>
+                        Update Comment
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('delete comment')">
+                        <i class="fas fa-comment-slash"></i>
+                        Delete Comment
+                    </button>
+                </div>
+
+                <div class="action-category">
+                    <div class="category-title">Users</div>
+                    <button class="action-item" onclick="sendQuickCommand('show users')">
+                        <i class="fas fa-users"></i>
+                        View Users
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('create user')">
+                        <i class="fas fa-user-plus"></i>
+                        Create User
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('update user')">
+                        <i class="fas fa-user-edit"></i>
+                        Update User
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('delete user')">
+                        <i class="fas fa-user-times"></i>
+                        Delete User
+                    </button>
+                </div>
+
+                <div class="action-category">
+                    <div class="category-title">Categories</div>
+                    <button class="action-item" onclick="sendQuickCommand('show categories')">
+                        <i class="fas fa-folder-open"></i>
+                        View Categories
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('create category')">
+                        <i class="fas fa-folder-plus"></i>
+                        Create Category
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('update category')">
+                        <i class="fas fa-folder"></i>
+                        Update Category
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('delete category')">
+                        <i class="fas fa-folder-minus"></i>
+                        Delete Category
+                    </button>
+                </div>
+
+                <div class="action-category">
+                    <div class="category-title">Tags</div>
+                    <button class="action-item" onclick="sendQuickCommand('show tags')">
+                        <i class="fas fa-tags"></i>
+                        View Tags
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('create tag')">
+                        <i class="fas fa-tag"></i>
+                        Create Tag
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('update tag')">
+                        <i class="fas fa-tag"></i>
+                        Update Tag
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('delete tag')">
+                        <i class="fas fa-times"></i>
+                        Delete Tag
+                    </button>
+                </div>
+
+                <div class="action-category">
+                    <div class="category-title">Content Types</div>
+                    <button class="action-item" onclick="sendQuickCommand('show post types')">
+                        <i class="fas fa-list"></i>
+                        Post Types
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('show post statuses')">
+                        <i class="fas fa-info-circle"></i>
+                        Post Statuses
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('show taxonomies')">
+                        <i class="fas fa-sitemap"></i>
+                        Taxonomies
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('show blocks')">
+                        <i class="fas fa-cube"></i>
+                        Blocks
+                    </button>
+                </div>
+
+                <div class="action-category">
+                    <div class="category-title">Navigation</div>
+                    <button class="action-item" onclick="sendQuickCommand('show menu items')">
+                        <i class="fas fa-bars"></i>
+                        Menu Items
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('show templates')">
+                        <i class="fas fa-code"></i>
+                        Templates
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('show themes')">
+                        <i class="fas fa-palette"></i>
+                        Themes
+                    </button>
+                </div>
+
+                <div class="action-category">
+                    <div class="category-title">Site Management</div>
+                    <button class="action-item" onclick="sendQuickCommand('show site settings')">
+                        <i class="fas fa-cog"></i>
+                        Site Settings
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('show site info')">
+                        <i class="fas fa-chart-line"></i>
+                        Site Info
+                    </button>
+                    <button class="action-item" onclick="sendQuickCommand('search content')">
+                        <i class="fas fa-search"></i>
+                        Search Content
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-area">
+            <!-- Header -->
+            <div class="chat-header">
+                <div class="header-left">
+                    <button class="menu-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="chat-title">Content Assistant</div>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="clearChat()" title="Clear Conversation">
+                        <i class="fas fa-refresh"></i> Clear
+                    </button>
+                    <button class="header-btn" onclick="exportChat()" title="Export Chat">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="messages-area" id="messagesArea">
+                <div class="messages-list" id="messagesList">
+                    <div class="welcome-screen">
+                        <div class="welcome-icon">
+                            <i class="fas fa-sparkles"></i>
+                        </div>
+                        <h2 class="welcome-title">Welcome to AI Assistant</h2>
+                        <p class="welcome-description">
+                            I'm your intelligent content companion, ready to help you manage and create amazing content.
+                            Ask me anything or use the quick actions to get started.
+                        </p>
+                        <div class="welcome-suggestions">
+                            <div class="suggestion-chip" onclick="sendQuickCommand('show recent posts')">
+                                Show recent posts
                             </div>
-                            <div class="message-content">
-                                <strong>👋 Hello! I'm your WordPress AI Assistant</strong><br><br>
-                                I can help you manage your WordPress content:<br>
-                                • 📝 View and search your posts<br>
-                                • ✍️ Create new blog posts<br>
-                                • ℹ️ Get site information<br><br>
-                                What would you like to do today?
+                            <div class="suggestion-chip" onclick="sendQuickCommand('create a blog post')">
+                                Create a blog post
+                            </div>
+                            <div class="suggestion-chip" onclick="sendQuickCommand('site analytics')">
+                                Site analytics
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Typing Indicator -->
-                    <div class="typing-indicator" id="typingIndicator">
-                        <div class="message bot">
-                            <div class="message-avatar bot-avatar">
-                                <i class="fas fa-robot"></i>
-                            </div>
-                            <div class="message-content">
-                                Assistant is typing
-                                <div class="typing-dots">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
+                <!-- Typing Indicator -->
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-content">
+                        <div class="message-avatar bot-avatar">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div class="typing-bubble">
+                            <div class="typing-dots">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Chat Input -->
-                    <div class="chat-input">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="messageInput"
-                                   placeholder="Ask me about your WordPress site..."
-                                   onkeypress="handleKeyPress(event)">
-                            <button class="send-btn" onclick="sendMessage()" id="sendBtn">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <textarea
+                            class="message-input"
+                            id="messageInput"
+                            placeholder="Ask me anything about your content..."
+                            rows="1"
+                            onkeydown="handleKeyPress(event)"
+                            oninput="autoResize(this)">
+                        </textarea>
+                        <button class="send-button" onclick="sendMessage()" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Mobile Overlay -->
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
     <script>
-        const chatMessages = document.getElementById('chatMessages');
+        const messagesArea = document.getElementById('messagesArea');
+        const messagesList = document.getElementById('messagesList');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const typingIndicator = document.getElementById('typingIndicator');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
 
-        // Focus on input when page loads
-        messageInput.focus();
+        // Auto-resize textarea
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+        }
 
+        // Handle keyboard shortcuts
         function handleKeyPress(event) {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
                 sendMessage();
             }
         }
 
+        // Toggle mobile sidebar
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+        }
+
+        // Send quick command
         function sendQuickCommand(command) {
             messageInput.value = command;
             sendMessage();
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
         }
 
+        // Send message
         async function sendMessage() {
             const message = messageInput.value.trim();
             if (!message) return;
 
-            // Disable input and show user message
+            // Clear welcome message if it exists
+            const welcomeScreen = document.querySelector('.welcome-screen');
+            if (welcomeScreen) {
+                welcomeScreen.remove();
+            }
+
+            // Disable input
             sendBtn.disabled = true;
             messageInput.disabled = true;
+
+            // Add user message
             addMessage(message, 'user');
             messageInput.value = '';
+            messageInput.style.height = 'auto';
 
             // Show typing indicator
             showTypingIndicator();
@@ -379,9 +1019,8 @@
                     addMessage(`❌ Error: ${data.error}`, 'bot');
                 }
             } catch (error) {
-                addMessage('❌ Connection error. Please try again.' + error + data, 'bot');
+                addMessage('❌ Connection error. Please try again.', 'bot');
             } finally {
-                // Re-enable input and hide typing indicator
                 hideTypingIndicator();
                 sendBtn.disabled = false;
                 messageInput.disabled = false;
@@ -389,20 +1028,23 @@
             }
         }
 
+        // Add message to chat
         function addMessage(content, type) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
 
             const avatar = document.createElement('div');
             avatar.className = `message-avatar ${type}-avatar`;
-            avatar.innerHTML = type === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+            avatar.innerHTML = type === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-brain"></i>';
 
             const messageContent = document.createElement('div');
             messageContent.className = 'message-content';
 
-            // Convert markdown-like formatting
-            const formattedContent = formatMessage(content);
-            messageContent.innerHTML = formattedContent;
+            const messageBubble = document.createElement('div');
+            messageBubble.className = 'message-bubble';
+            messageBubble.innerHTML = formatMessage(content);
+
+            messageContent.appendChild(messageBubble);
 
             if (type === 'user') {
                 messageDiv.appendChild(messageContent);
@@ -412,12 +1054,12 @@
                 messageDiv.appendChild(messageContent);
             }
 
-            chatMessages.appendChild(messageDiv);
+            messagesList.appendChild(messageDiv);
             scrollToBottom();
         }
 
+        // Format message content
         function formatMessage(content) {
-            // Basic markdown-like formatting
             return content
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
@@ -425,6 +1067,7 @@
                 .replace(/\n/g, '<br>');
         }
 
+        // Show/hide typing indicator
         function showTypingIndicator() {
             typingIndicator.style.display = 'block';
             scrollToBottom();
@@ -434,42 +1077,76 @@
             typingIndicator.style.display = 'none';
         }
 
+        // Scroll to bottom
         function scrollToBottom() {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            messagesArea.scrollTop = messagesArea.scrollHeight;
         }
 
+        // Clear chat
         async function clearChat() {
-            if (confirm('Are you sure you want to clear the chat history?')) {
+            if (confirm('Are you sure you want to clear the conversation?')) {
                 try {
                     await fetch('/clear', { method: 'POST' });
 
-                    // Clear messages except welcome message
-                    const messages = chatMessages.querySelectorAll('.message');
-                    for (let i = 1; i < messages.length; i++) {
-                        messages[i].remove();
-                    }
-
-                    // Show confirmation
-                    addMessage('🧹 Chat history cleared!', 'bot');
+                    // Clear all messages
+                    messagesList.innerHTML = `
+                        <div class="welcome-screen">
+                            <div class="welcome-icon">
+                                <i class="fas fa-sparkles"></i>
+                            </div>
+                            <h2 class="welcome-title">Welcome to AI Assistant</h2>
+                            <p class="welcome-description">
+                                I'm your intelligent content companion, ready to help you manage and create amazing content.
+                                Ask me anything or use the quick actions to get started.
+                            </p>
+                            <div class="welcome-suggestions">
+                                <div class="suggestion-chip" onclick="sendQuickCommand('show recent posts')">
+                                    Show recent posts
+                                </div>
+                                <div class="suggestion-chip" onclick="sendQuickCommand('create a blog post')">
+                                    Create a blog post
+                                </div>
+                                <div class="suggestion-chip" onclick="sendQuickCommand('site analytics')">
+                                    Site analytics
+                                </div>
+                            </div>
+                        </div>
+                    `;
 
                 } catch (error) {
-                    addMessage('❌ Error clearing chat history.', 'bot');
+                    addMessage('❌ Error clearing conversation.', 'bot');
                 }
             }
         }
 
-        // Add some personality with random loading messages
-        const loadingMessages = [
-            "Let me check that for you...",
-            "Working on it...",
-            "Connecting to WordPress...",
-            "Processing your request...",
-            "Almost done..."
-        ];
+        // Export chat (placeholder)
+        function exportChat() {
+            const messages = Array.from(messagesList.querySelectorAll('.message')).map(msg => {
+                const type = msg.classList.contains('user') ? 'User' : 'Assistant';
+                const content = msg.querySelector('.message-bubble').textContent;
+                return `${type}: ${content}`;
+            }).join('\n\n');
 
-        function getRandomLoadingMessage() {
-            return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+            const blob = new Blob([messages], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'chat-export.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
+
+        // Focus input on load
+        messageInput.focus();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
     </script>
 </body>
 </html>
