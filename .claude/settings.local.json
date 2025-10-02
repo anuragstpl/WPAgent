@@ -4,7 +4,11 @@
       "WebFetch(domain:vibebuilder.studio)",
       "Bash(python test_connection.py:*)",
       "Bash(python:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(pip install:*)",
+      "WebFetch(domain:developer.wordpress.org)"
     ],
     "deny": [],
     "ask": []
